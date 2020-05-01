@@ -1,3 +1,0 @@
-# EC_Validity
-Trying an edit...
-Repository to house code related to the EC Validity WG investigations, reports, and analyses

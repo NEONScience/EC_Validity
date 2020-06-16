@@ -18,8 +18,12 @@ fluxPlots <- function(filepath, numTowers){
   }
   
   flux <- readRDS(filepath)
+
   
   for (i in seq(1:numTowers)){
+    
+    # Filter out old versions of data that don't contain Raw and Cor columns
+    if (any(grepl("data.fluxCo2.turb.fluxCor", names(flux[[i]]))) == TRUE){
     
     flux[[i]]$TimeB <- as.POSIXct(flux[[i]]$timeBgn,
                                      format="%Y-%m-%dT%H:%M:%S",
@@ -27,6 +31,8 @@ fluxPlots <- function(filepath, numTowers){
     
     ##Add year and month column for summary
     flux[[i]]$YearMonth <- substr(flux[[i]]$TimeB,0,7)
+    
+    year <- substr(flux[[i]]$TimeB[1],0,7) # First occurence of year in ts
     
     ##Add year, month, day column for summary
     flux[[i]]$YearMonthDay = substr(flux[[i]]$TimeB,0,10)
@@ -86,7 +92,7 @@ fluxPlots <- function(filepath, numTowers){
       ggplot(flux[[i]]) +
         geom_point(aes(x=TimeB, y=data.fluxCo2.turb.fluxRaw, color="blue"))+
         geom_point(aes(x=TimeB, y=data.fluxCo2.turb.fluxCor, color="green"))+
-        labs(title= paste0("2019 ", names(flux)[i], " Turbulent Flux"),
+        labs(title= paste0(year," ", names(flux)[i], " Turbulent Flux"),
              x="Date", y="CO2 umol m2/s-1")+
         scale_color_identity(name=" ",
                              breaks = c("blue", "green"),
@@ -102,8 +108,8 @@ fluxPlots <- function(filepath, numTowers){
         geom_col()+
         ylim(0,100)+
         labs(x = "Date", y = "Percent",
-             title = paste0(names(flux)[i], 
-                            " 2019 - Mean Percent of Missing Corrected Turbulent Flux"))
+             title = paste0(names(flux)[i], year,
+                            " - Mean Percent of Missing Corrected Turbulent Flux"))
       ggsave(filename= paste0(names(flux)[i], "_ECTEPercentMissingCorrFlux.pdf"),
          width = plotW, height = plotH, units = units, path = plotDir)
       
@@ -111,10 +117,14 @@ fluxPlots <- function(filepath, numTowers){
         geom_col()+
         ylim(0,100)+
         labs(x = "Date", y = "Percent",
-             title = paste0(names(flux)[i], " 2019 - Mean Percent of Quality Flags Turbulent Flux"))
+             title = paste0(names(flux)[i], year,
+                            " - Mean Percent of Quality Flags Turbulent Flux"))
       ggsave(filename= paste0(names(flux)[i], "_ECTEPercentQF.pdf"),
            width = plotW, height = plotH, units = units, path = plotDir)
-
+    } else{
+        print(paste0(names(flux)[i], " data is missing Raw and Cor flux columns.",
+                     " No plots were generated."))
+    }
   }
 }
 
